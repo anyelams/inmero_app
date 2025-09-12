@@ -1,0 +1,21 @@
+{
+  "welcome": {
+    "title": "Welcome to {{appName}}!",
+    "subtitle": "To access all functionalities, please register or sign in with your account.",
+    "signIn": "Sign In",
+    "register": "Register",
+    "language": "English",
+    "selectLanguage": "Select language"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "login": "Login",
+    "register": "Register"
+  },
+  "common": {
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  }
+}
