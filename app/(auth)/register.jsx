@@ -13,102 +13,88 @@ import CustomInput from "../../components/CustomInput";
 import LogoInmero from "../../components/LogoInmero";
 import { colors } from "../../config/theme";
 import { typography } from "../../config/typography";
+import { useLanguage } from "../../context/LanguageContext";
+import {
+  getErrorMessage,
+  getPasswordStrength,
+  validateRegisterForm,
+} from "../../utils/validation";
 
 const { API_URL } = Constants.expoConfig.extra;
-
-// Función para evaluar la seguridad de la contraseña
-const getPasswordStrength = (password) => {
-  let score = 0;
-  let feedback = [];
-
-  if (password.length >= 8) {
-    score += 1;
-  } else {
-    feedback.push("8+ caracteres");
-  }
-
-  if (/[A-Z]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push("mayúscula");
-  }
-
-  if (/[0-9]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push("número");
-  }
-
-  if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push("carácter especial");
-  }
-
-  if (score === 4) return "¡Contraseña segura!";
-  return `Falta: ${feedback.join(", ")}`;
-};
 
 export default function Register() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const { t } = useLanguage();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [isRegistered, setIsRegistered] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(null);
+
+  const handleInputChange = (field, value) => {
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
+
+    // Limpiar error del campo cuando el usuario empiece a escribir
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: null }));
+    }
+
+    // Actualizar evaluación de contraseña en tiempo real
+    if (field === "password") {
+      const strength = getPasswordStrength(value, t);
+      setPasswordStrength(strength);
+    }
+  };
 
   const handleRegister = async () => {
-    if (!username || !password) {
-      setError("Por favor completa todos los campos.");
-      return;
-    }
+    if (loading) return;
 
-    if (password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres.");
-      return;
-    }
-    if (!/[A-Z]/.test(password)) {
-      setError("La contraseña debe incluir al menos una mayúscula.");
-      return;
-    }
-    if (!/[0-9]/.test(password)) {
-      setError("La contraseña debe incluir al menos un número.");
-      return;
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      setError("La contraseña debe incluir al menos un carácter especial.");
+    setLoading(true);
+    setErrors({});
+
+    // Validar formulario
+    const validation = validateRegisterForm(formData, t);
+
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
-      setError("");
-
       const response = await axios.post(`${API_URL}/auth/register`, {
-        username,
-        password,
+        username: formData.email.trim(),
+        password: formData.password,
       });
 
       const data = response.data;
 
       if (data.success) {
-        setIsRegistered(true);
-        setTimeout(() => {
-          Alert.alert(
-            "¡Registro exitoso!",
-            "Te enviamos un correo de confirmación. Verifica tu cuenta antes de iniciar sesión.",
-            [{ text: "Entendido", onPress: () => router.push("/login") }]
-          );
-        }, 1000);
+        // Mostrar alerta de éxito
+        Alert.alert(
+          t("success.registrationComplete"),
+          t("success.confirmationEmailSent"),
+          [
+            {
+              text: t("success.understood"),
+              onPress: () => router.push("/login"),
+            },
+          ]
+        );
       } else {
-        setError(data.message || "Error desconocido.");
+        setErrors({
+          general: data.message || t("errors.registerFailed"),
+        });
       }
     } catch (err) {
       console.error("ERROR:", err.response?.data || err.message);
-      setError(
-        err.response?.data?.message || "No se pudo conectar con el servidor."
-      );
+      const errorMessage = getErrorMessage(err, t, "errors.registerFailed");
+      setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -121,58 +107,93 @@ export default function Register() {
         <LogoInmero width={150} height={140} />
       </View>
 
-      <Text style={styles.title}>Crear cuenta</Text>
+      <Text style={styles.title}>{t("auth.registerTitle")}</Text>
+
+      {/* Error general */}
+      {errors.general && (
+        <Text style={styles.generalError}>{errors.general}</Text>
+      )}
 
       <CustomInput
-        label="Correo"
-        placeholder="Correo electrónico"
-        value={username}
-        onChangeText={setUsername}
+        label={t("auth.email")}
+        placeholder={t("auth.enterEmail")}
+        value={formData.email}
+        onChangeText={(value) => handleInputChange("email", value)}
         icon="mail-outline"
         keyboardType="email-address"
+        autoCapitalize="none"
         editable={!loading}
+        error={errors.email}
       />
 
       <CustomInput
-        label="Contraseña"
-        placeholder="Contraseña"
-        value={password}
-        onChangeText={setPassword}
+        label={t("auth.password")}
+        placeholder={t("auth.enterPassword")}
+        value={formData.password}
+        onChangeText={(value) => handleInputChange("password", value)}
         icon="lock-closed-outline"
         secureTextEntry={true}
         showPasswordToggle={true}
         editable={!loading}
+        error={errors.password}
       />
 
       {/* Evaluación visual de contraseña */}
-      {password !== "" && (
-        <Text style={styles.passwordStrength}>
-          {getPasswordStrength(password)}
-        </Text>
+      {formData.password !== "" && passwordStrength && (
+        <View style={styles.passwordStrengthContainer}>
+          <Text
+            style={[
+              styles.passwordStrength,
+              {
+                color: passwordStrength.isValid
+                  ? colors.success
+                  : colors.secondary,
+              },
+            ]}
+          >
+            {passwordStrength.message}
+          </Text>
+          {/* Barra de progreso visual */}
+          <View style={styles.strengthBar}>
+            {[1, 2, 3, 4].map((level) => (
+              <View
+                key={level}
+                style={[
+                  styles.strengthSegment,
+                  {
+                    backgroundColor:
+                      level <= passwordStrength.score
+                        ? passwordStrength.score >= 3
+                          ? colors.success
+                          : colors.warning
+                        : colors.lightGray,
+                  },
+                ]}
+              />
+            ))}
+          </View>
+        </View>
       )}
-
-      {/* Error general */}
-      {error !== "" && <Text style={styles.error}>{error}</Text>}
 
       {/* Botón de registro */}
       <CustomButton
-        text={loading ? "Registrando..." : "Registrarse"}
+        text={loading ? t("auth.registering") : t("auth.register")}
         onPress={handleRegister}
         variant="primary"
         icon={!loading ? "arrow-forward" : null}
         disabled={loading}
         fullWidth
-        style={{ marginTop: 10 }}
+        style={styles.registerButton}
       />
 
       {/* Link al login */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>¿Ya tienes una cuenta? </Text>
+        <Text style={styles.footerText}>{t("auth.alreadyHaveAccount")} </Text>
         <TouchableOpacity
           onPress={() => router.replace("/login")}
           disabled={loading}
         >
-          <Text style={styles.linkText}>Inicia sesión</Text>
+          <Text style={styles.linkText}>{t("auth.signIn")}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -191,26 +212,45 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.bold.large,
-    fontSize: 26, // Override para título principal
+    fontSize: 26,
     marginTop: 10,
     marginBottom: 20,
     color: colors.text,
   },
+  generalError: {
+    color: colors.error,
+    marginBottom: 16,
+    textAlign: "center",
+    ...typography.regular.regular,
+    backgroundColor: colors.errorLight || "#ffebee",
+    padding: 12,
+    borderRadius: 8,
+  },
+  passwordStrengthContainer: {
+    marginTop: -8,
+    marginBottom: 12,
+  },
   passwordStrength: {
-    color: colors.secondary,
-    marginBottom: 10,
+    marginBottom: 8,
     ...typography.medium.small,
   },
-  error: {
-    color: colors.error,
-    marginBottom: 10,
-    ...typography.regular.small,
+  strengthBar: {
+    flexDirection: "row",
+    gap: 4,
+    height: 4,
+  },
+  strengthSegment: {
+    flex: 1,
+    borderRadius: 2,
+  },
+  registerButton: {
+    marginTop: 20,
   },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 24,
   },
   footerText: {
     color: colors.textSec,
@@ -218,6 +258,6 @@ const styles = StyleSheet.create({
   },
   linkText: {
     color: colors.secondary,
-    ...typography.semibold.medium,
+    ...typography.semibold.regular,
   },
 });
