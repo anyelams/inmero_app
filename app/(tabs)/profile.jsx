@@ -92,7 +92,10 @@ const Profile = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Header de la pantalla */}
-      <Header title="Mi perfil" onBackPress={() => router.push("/")} />
+      <Header
+        title="Mi perfil"
+        onBackPress={() => router.replace("/(tabs)/home")}
+      />
 
       <ScrollView
         style={styles.scrollView}

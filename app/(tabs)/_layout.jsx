@@ -33,20 +33,8 @@ export default function TabLayout() {
           }),
         },
       }}
+      initialRouteName="home"
     >
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: "Notificaciones",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "notifications" : "notifications-outline"}
-              size={22}
-              color={color}
-            />
-          ),
-        }}
-      />
       <Tabs.Screen
         name="home"
         options={{
@@ -54,6 +42,19 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
+              size={22}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: "Notificaciones",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "notifications" : "notifications-outline"}
               size={22}
               color={color}
             />

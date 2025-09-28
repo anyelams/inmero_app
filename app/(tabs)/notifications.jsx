@@ -110,7 +110,7 @@ export default function NotificationsScreen() {
       {/* Header con contador de notificaciones no leídas */}
       <Header
         title={`Notificaciones${unreadCount > 0 ? ` (${unreadCount})` : ""}`}
-        onBackPress={() => router.push("/")}
+        onBackPress={() => router.replace("/(tabs)/home")}
       />
 
       {/* Lista scrolleable de notificaciones */}
