@@ -1,7 +1,10 @@
 // app/(auth)/EmailVerificationSent.jsx
 import { useRouter } from "expo-router";
-import { Image, SafeAreaView, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Image, StyleSheet, Text, View } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import CustomButton from "../../components/CustomButton";
 import LogoInmero from "../../components/LogoInmero";
 import { colors } from "../../config/theme";
