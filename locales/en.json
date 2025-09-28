@@ -10,44 +10,42 @@
   "auth": {
     "email": "Email",
     "password": "Password",
-    "confirmPassword": "Confirm Password",
-    "fullName": "Full Name",
     "login": "Login",
     "register": "Register",
     "loginTitle": "Sign In",
     "registerTitle": "Create Account",
-    "loginSubtitle": "Welcome back! Please enter your details.",
-    "registerSubtitle": "Create your account to get started.",
     "forgotPassword": "Forgot your password?",
     "dontHaveAccount": "Don't have an account?",
     "alreadyHaveAccount": "Already have an account?",
     "signUp": "Sign up here",
     "signIn": "Sign in",
     "orContinueWith": "or",
-    "agreeToTerms": "I agree to the Terms of Service and Privacy Policy",
-    "createAccount": "Create Account",
-    "welcomeBack": "Welcome back",
     "loggingIn": "Signing in...",
     "registering": "Registering...",
     "enterEmail": "Enter your email",
     "enterPassword": "Enter your password",
-    "rememberMe": "Remember me",
-    "clearSavedEmail": "Use another email"
+    "rememberMe": "Remember me"
+  },
+  "forgotPassword": {
+    "title": "Reset Password",
+    "subtitle": "Enter your email address and we'll send you a link to reset your password.",
+    "sendLink": "Send Reset Link",
+    "sending": "Sending...",
+    "rememberPassword": "Remember your password?"
+  },
+  "emailVerification": {
+    "title": "Check your email!",
+    "description": "We've sent you a link to reset your password. Please check your inbox.",
+    "backToLogin": "Back to login"
   },
   "validation": {
     "emailRequired": "Please enter your email",
     "emailInvalid": "Invalid email",
     "passwordRequired": "Please enter your password",
-    "passwordMinLength": "Password must be at least 8 characters",
     "confirmPasswordRequired": "Please confirm your password",
     "passwordsDontMatch": "Passwords don't match",
     "fullNameRequired": "Full name is required",
-    "fullNameMinLength": "Full name must be at least 2 characters",
-    "termsRequired": "You must agree to the terms and conditions",
-    "passwordNeedsUppercase": "Password must include at least one uppercase letter",
-    "passwordNeedsNumber": "Password must include at least one number",
-    "passwordNeedsSpecial": "Password must include at least one special character",
-    "completeAllFields": "Please complete all fields"
+    "fullNameMinLength": "Full name must be at least 2 characters"
   },
   "errors": {
     "loginFailed": "Incorrect username or password",
@@ -66,7 +64,6 @@
     "understood": "Understood"
   },
   "password": {
-    "strength": "Password strength:",
     "secure": "Secure password!",
     "missing": "Missing: {{items}}",
     "requirements": {
@@ -78,12 +75,6 @@
   },
   "common": {
     "loading": "Loading...",
-    "cancel": "Cancel",
-    "confirm": "Confirm",
-    "continue": "Continue",
-    "back": "Back",
-    "next": "Next",
-    "done": "Done",
-    "save": "Save"
+    "cancel": "Cancel"
   }
 }

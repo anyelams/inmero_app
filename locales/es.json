@@ -10,44 +10,42 @@
   "auth": {
     "email": "Correo electrónico",
     "password": "Contraseña",
-    "confirmPassword": "Confirmar contraseña",
-    "fullName": "Nombre completo",
     "login": "Iniciar sesión",
     "register": "Registrarse",
     "loginTitle": "Iniciar sesión",
     "registerTitle": "Crear cuenta",
-    "loginSubtitle": "¡Bienvenido de vuelta! Por favor ingresa tus datos.",
-    "registerSubtitle": "Crea tu cuenta para comenzar.",
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "dontHaveAccount": "¿No tienes una cuenta?",
     "alreadyHaveAccount": "¿Ya tienes una cuenta?",
     "signUp": "Regístrate aquí",
     "signIn": "Inicia sesión",
     "orContinueWith": "o",
-    "agreeToTerms": "Acepto los Términos de Servicio y Política de Privacidad",
-    "createAccount": "Crear cuenta",
-    "welcomeBack": "Bienvenido de vuelta",
     "loggingIn": "Iniciando sesión...",
     "registering": "Registrando...",
     "enterEmail": "Ingresa tu correo electrónico",
     "enterPassword": "Ingresa tu contraseña",
-    "rememberMe": "Recordarme",
-    "clearSavedEmail": "Usar otro correo"
+    "rememberMe": "Recordarme"
+  },
+  "forgotPassword": {
+    "title": "Recuperar contraseña",
+    "subtitle": "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+    "sendLink": "Enviar enlace de recuperación",
+    "sending": "Enviando...",
+    "rememberPassword": "¿Recordaste tu contraseña?"
+  },
+  "emailVerification": {
+    "title": "¡Revisa tu correo!",
+    "description": "Te hemos enviado un enlace para restablecer tu contraseña. Por favor, revisa tu bandeja de entrada.",
+    "backToLogin": "Volver a iniciar sesión"
   },
   "validation": {
     "emailRequired": "Por favor ingresa tu correo electrónico",
     "emailInvalid": "Correo electrónico inválido",
     "passwordRequired": "Por favor ingresa tu contraseña",
-    "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
     "confirmPasswordRequired": "Por favor confirma tu contraseña",
     "passwordsDontMatch": "Las contraseñas no coinciden",
     "fullNameRequired": "El nombre completo es obligatorio",
-    "fullNameMinLength": "El nombre completo debe tener al menos 2 caracteres",
-    "termsRequired": "Debes aceptar los términos y condiciones",
-    "passwordNeedsUppercase": "La contraseña debe incluir al menos una mayúscula",
-    "passwordNeedsNumber": "La contraseña debe incluir al menos un número",
-    "passwordNeedsSpecial": "La contraseña debe incluir al menos un carácter especial",
-    "completeAllFields": "Por favor completa todos los campos"
+    "fullNameMinLength": "El nombre completo debe tener al menos 2 caracteres"
   },
   "errors": {
     "loginFailed": "Usuario o contraseña incorrectos",
@@ -66,7 +64,6 @@
     "understood": "Entendido"
   },
   "password": {
-    "strength": "Fortaleza de contraseña:",
     "secure": "¡Contraseña segura!",
     "missing": "Falta: {{items}}",
     "requirements": {
@@ -78,12 +75,6 @@
   },
   "common": {
     "loading": "Cargando...",
-    "cancel": "Cancelar",
-    "confirm": "Confirmar",
-    "continue": "Continuar",
-    "back": "Atrás",
-    "next": "Siguiente",
-    "done": "Listo",
-    "save": "Guardar"
+    "cancel": "Cancelar"
   }
 }
