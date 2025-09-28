@@ -1,16 +1,16 @@
 // app/(auth)/login.jsx
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import { useRouter } from "expo-router";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
 import CustomButton from "../../components/CustomButton";
 import CustomInput from "../../components/CustomInput";
 import LogoInmero from "../../components/LogoInmero";
@@ -19,31 +19,45 @@ import { typography } from "../../config/typography";
 import { useLanguage } from "../../context/LanguageContext";
 import { useSession } from "../../context/SessionContext";
 
-const { API_URL, API_URL_LOGIN, eas } = Constants.expoConfig.extra;
+// Configuración de la API y proyecto
+const { API_URL, API_URL_LOGIN, API_URL_NOTIFICATIONS_TOKEN, eas } =
+  Constants.expoConfig.extra;
 const projectId = eas?.projectId;
 
-// Clave para AsyncStorage
+// Clave para persistir el último email utilizado
 const LAST_EMAIL_KEY = "@last_login_email";
 
+/**
+ * Pantalla de inicio de sesión con funcionalidades avanzadas
+ * Incluye validación granular, manejo de estados de usuario, recordar email,
+ * configuración de notificaciones push y navegación condicional
+ */
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
 
+  // Estados del formulario
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
-  const [errors, setErrors] = useState({}); // Cambio: objeto en vez de string
+  const [errors, setErrors] = useState({}); // Errores específicos por campo
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
   const [rememberEmail, setRememberEmail] = useState(true);
 
   const { setUsername, guardarSesionCompleta } = useSession();
 
-  // Cargar email guardado al iniciar la pantalla
+  /**
+   * Cargar email guardado al inicializar la pantalla
+   */
   useEffect(() => {
     loadSavedEmail();
   }, []);
 
+  /**
+   * Carga el último email usado desde AsyncStorage
+   * Configura el estado inicial del checkbox "recordarme"
+   */
   const loadSavedEmail = async () => {
     try {
       const savedEmail = await AsyncStorage.getItem(LAST_EMAIL_KEY);
@@ -60,6 +74,10 @@ export default function LoginScreen() {
     }
   };
 
+  /**
+   * Guarda el email en AsyncStorage para futuras sesiones
+   * @param {string} email - Email a guardar
+   */
   const saveEmail = async (email) => {
     try {
       await AsyncStorage.setItem(LAST_EMAIL_KEY, email);
@@ -68,38 +86,53 @@ export default function LoginScreen() {
     }
   };
 
+  /**
+   * Valida formato de email usando regex
+   * @param {string} email - Email a validar
+   * @returns {boolean} - true si el email es válido
+   */
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  // Funciones para limpiar errores individuales cuando usuario escribe
+  /**
+   * Maneja cambios en el campo email y limpia errores relacionados
+   * @param {string} value - Nuevo valor del email
+   */
   const handleEmailChange = (value) => {
     setCorreo(value);
     if (errors.email) {
       setErrors((prev) => ({ ...prev, email: null }));
     }
-    // También limpiar error general si existe
     if (errors.general) {
       setErrors((prev) => ({ ...prev, general: null }));
     }
   };
 
+  /**
+   * Maneja cambios en el campo contraseña y limpia errores relacionados
+   * @param {string} value - Nuevo valor de la contraseña
+   */
   const handlePasswordChange = (value) => {
     setContrasena(value);
     if (errors.password) {
       setErrors((prev) => ({ ...prev, password: null }));
     }
-    // También limpiar error general si existe
     if (errors.general) {
       setErrors((prev) => ({ ...prev, general: null }));
     }
   };
 
+  /**
+   * Maneja el proceso completo de inicio de sesión
+   * Incluye validaciones, autenticación, manejo de estados de usuario,
+   * configuración de sesión y notificaciones push
+   */
   const handleLogin = async () => {
     if (isLoading) return;
 
-    setErrors({}); // Cambio: limpiar objeto
+    setErrors({});
     setIsLoading(true);
 
-    // Validaciones que asignan a campos específicos
+    // Validaciones del formulario
     if (!correo.trim()) {
       setErrors({ email: t("validation.emailRequired") });
       setIsLoading(false);
@@ -119,6 +152,7 @@ export default function LoginScreen() {
     }
 
     try {
+      // Llamada al API de autenticación
       const response = await axios.post(`${API_URL}${API_URL_LOGIN}`, {
         username: correo.trim(),
         password: contrasena,
@@ -133,36 +167,43 @@ export default function LoginScreen() {
         return;
       }
 
-      // Guardar email solo si el usuario quiere recordarlo
+      // Guardar email según preferencia del usuario
       if (rememberEmail) {
         await saveEmail(correo.trim());
       } else {
         await AsyncStorage.removeItem(LAST_EMAIL_KEY);
       }
 
-      // Validaciones de estado del usuario
+      // Manejo de estados especiales del usuario
+      // Estado 2: Necesita completar registro de persona
       if (usuarioEstado === 2) {
         router.replace("/registro-persona");
         setIsLoading(false);
         return;
-      } else if (usuarioEstado === 3) {
+      }
+      // Estado 3: Necesita completar registro de empresa
+      else if (usuarioEstado === 3) {
         router.replace("/registro-empresa");
         setIsLoading(false);
         return;
       }
 
+      // Validar que el usuario tenga empresas asociadas
       if (!rolesByCompany || rolesByCompany.length === 0) {
         setErrors({ general: t("errors.noAssociatedCompanies") });
         setIsLoading(false);
         return;
       }
 
+      // Configurar sesión del usuario
       await setUsername(correo.trim());
 
+      // Buscar empresa actual en la lista de empresas disponibles
       const empresaActual = rolesByCompany.find(
         (empresa) => empresa.empresaId === empresaId && empresa.rolId === rolId
       );
 
+      // Guardar sesión completa con empresa actual o primera disponible
       if (!empresaActual) {
         console.warn(
           "No se encontró empresa actual, usando primera disponible"
@@ -187,8 +228,10 @@ export default function LoginScreen() {
         });
       }
 
+      // Configurar notificaciones push
       await configurarNotificacionesPush(correo.trim());
 
+      // Navegar a pantalla principal
       router.replace("/home");
     } catch (err) {
       console.error("Error en login:", err);
@@ -198,7 +241,7 @@ export default function LoginScreen() {
         status: err.response?.status,
       });
 
-      // Manejo de errores - todos van como error general
+      // Manejo granular de errores HTTP y de red
       let errorMessage;
       if (err.response?.status === 401) {
         errorMessage = t("errors.loginFailed");
@@ -223,9 +266,14 @@ export default function LoginScreen() {
     }
   };
 
-  // Notificaciones Push con importación dinámica
+  /**
+   * Configura notificaciones push para el usuario autenticado
+   * Maneja permisos, obtención de token y registro en el servidor
+   * @param {string} userEmail - Email del usuario para asociar el token
+   */
   const configurarNotificacionesPush = async (userEmail) => {
     try {
+      // Solo ejecutar en dispositivos físicos
       if (!Device.isDevice) {
         console.log(
           "No es un dispositivo físico, saltando notificaciones push"
@@ -233,8 +281,10 @@ export default function LoginScreen() {
         return;
       }
 
+      // Importación dinámica para evitar errores en desarrollo
       const Notifications = await import("expo-notifications");
 
+      // Configurar handler de notificaciones
       Notifications.setNotificationHandler({
         handleNotification: async () => ({
           shouldShowAlert: true,
@@ -243,6 +293,7 @@ export default function LoginScreen() {
         }),
       });
 
+      // Verificar y solicitar permisos
       const { status: existingStatus } =
         await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
@@ -252,6 +303,7 @@ export default function LoginScreen() {
         finalStatus = status;
       }
 
+      // Si se otorgaron permisos, obtener y registrar token
       if (finalStatus === "granted") {
         const pushToken = (
           await Notifications.getExpoPushTokenAsync({
@@ -261,8 +313,8 @@ export default function LoginScreen() {
 
         console.log("Token de notificaciones obtenido:", pushToken);
 
-        const notificationEndpoint = `${API_URL}/notifications/token`;
-
+        // Registrar token en el servidor
+        const notificationEndpoint = `${API_URL}${API_URL_NOTIFICATIONS_TOKEN}`;
         await fetch(notificationEndpoint, {
           method: "POST",
           headers: {
@@ -274,6 +326,7 @@ export default function LoginScreen() {
           }),
         });
 
+        // Configurar listener para notificaciones recibidas
         const subscription = Notifications.addNotificationReceivedListener(
           (notification) => {
             console.log("Notificación recibida:", notification);
@@ -287,7 +340,7 @@ export default function LoginScreen() {
     }
   };
 
-  // Mostrar loading mientras carga el email
+  // Pantalla de loading mientras se carga el email guardado
   if (isLoadingEmail) {
     return (
       <SafeAreaView style={styles.container}>
@@ -301,10 +354,12 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Logo de la empresa */}
       <View style={[styles.logoContainer, { marginTop: insets.top + 0 }]}>
         <LogoInmero width={150} height={140} />
       </View>
 
+      {/* Título de la pantalla */}
       <Text style={styles.title}>{t("auth.loginTitle")}</Text>
 
       {/* Error general para errores de servidor */}
@@ -312,27 +367,29 @@ export default function LoginScreen() {
         <Text style={styles.generalError}>{errors.general}</Text>
       )}
 
+      {/* Campo de email con validación */}
       <CustomInput
         label={t("auth.email")}
         placeholder={t("auth.enterEmail")}
         value={correo}
-        onChangeText={handleEmailChange} // Cambio: función que limpia errores
+        onChangeText={handleEmailChange}
         icon="mail-outline"
         keyboardType="email-address"
         editable={!isLoading}
-        error={errors.email} // Cambio: error específico del campo (se pone rojo)
+        error={errors.email}
       />
 
+      {/* Campo de contraseña con toggle de visibilidad */}
       <CustomInput
         label={t("auth.password")}
         placeholder={t("auth.enterPassword")}
         value={contrasena}
-        onChangeText={handlePasswordChange} // Cambio: función que limpia errores
+        onChangeText={handlePasswordChange}
         icon="lock-closed-outline"
         secureTextEntry={true}
         showPasswordToggle={true}
         editable={!isLoading}
-        error={errors.password} // Cambio: error específico del campo (se pone rojo)
+        error={errors.password}
       />
 
       {/* Fila con checkbox "Recordarme" y link "Olvidaste contraseña" */}
@@ -361,6 +418,7 @@ export default function LoginScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Botón principal de login */}
       <CustomButton
         text={isLoading ? t("auth.loggingIn") : t("auth.login")}
         onPress={handleLogin}
@@ -371,12 +429,14 @@ export default function LoginScreen() {
         style={{ marginTop: 20 }}
       />
 
+      {/* Separador visual */}
       <View style={styles.dividerContainer}>
         <View style={styles.divider} />
         <Text style={styles.dividerText}>{t("auth.orContinueWith")}</Text>
         <View style={styles.divider} />
       </View>
 
+      {/* Footer con enlace a registro */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>{t("auth.dontHaveAccount")} </Text>
         <TouchableOpacity
@@ -391,15 +451,20 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Contenedor principal de la pantalla
   container: {
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 0,
     backgroundColor: colors.white,
   },
+
+  // Contenedor del logo con espaciado dinámico
   logoContainer: {
     alignItems: "center",
   },
+
+  // Título principal de la pantalla
   title: {
     ...typography.bold.big,
     fontSize: 26,
@@ -407,6 +472,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     color: colors.text,
   },
+
+  // Separador visual entre secciones
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -422,6 +489,8 @@ const styles = StyleSheet.create({
     color: colors.textSec,
     ...typography.regular.medium,
   },
+
+  // Footer con enlace a registro
   footer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -435,13 +504,16 @@ const styles = StyleSheet.create({
     color: colors.secondary,
     ...typography.semibold.regular,
   },
+
+  // Texto de loading
   loadingText: {
     textAlign: "center",
     color: colors.textSec,
     marginTop: 20,
     ...typography.regular.regular,
   },
-  // Error general para errores de servidor
+
+  // Error general con fondo destacado
   generalError: {
     color: colors.error,
     marginBottom: 16,
@@ -451,7 +523,8 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
   },
-  // Estilos para la fila con checkbox y forgot password
+
+  // Fila de opciones
   optionsRow: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -14,8 +14,10 @@ import {
   saveUsername,
 } from "../services/auth";
 
-// Obtener URL de la API desde configuración
+// Configuración de la API
 const API_URL = Constants.expoConfig?.extra?.API_URL ?? "";
+const API_URL_SWITCH_CONTEXT =
+  Constants.expoConfig?.extra?.API_URL_SWITCH_CONTEXT ?? "/auth/switch-context";
 
 // Crear contexto de sesión
 const SessionContext = createContext(null);
@@ -99,7 +101,7 @@ export const SessionProvider = ({ children }) => {
     try {
       // Realizar petición al servidor para cambiar contexto
       const response = await axios.post(
-        `${API_URL}/auth/switch-context`,
+        `${API_URL}${API_URL_SWITCH_CONTEXT}`,
         { empresaId, rolId, rememberAsDefault },
         { headers: { Authorization: `Bearer ${token}` } }
       );

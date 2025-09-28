@@ -20,7 +20,7 @@ import {
   validateRegisterForm,
 } from "../../utils/validation";
 
-const { API_URL } = Constants.expoConfig.extra;
+const { API_URL, API_URL_REGISTER } = Constants.expoConfig.extra;
 
 export default function Register() {
   const router = useRouter();
@@ -67,7 +67,7 @@ export default function Register() {
     }
 
     try {
-      const response = await axios.post(`${API_URL}/auth/register`, {
+      const response = await axios.post(`${API_URL}${API_URL_REGISTER}`, {
         username: formData.email.trim(),
         password: formData.password,
       });
