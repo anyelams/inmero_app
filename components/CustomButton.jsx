@@ -6,21 +6,40 @@ import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { colors } from "../config/theme";
 import { typography } from "../config/typography";
 
+/**
+ * Botón personalizable con múltiples variantes, iconos y opciones de navegación
+ * @param {Object} props
+ * @param {string} props.text - Texto a mostrar en el botón
+ * @param {Function} [props.onPress] - Función a ejecutar al presionar (tiene prioridad sobre route)
+ * @param {string} [props.route] - Ruta de navegación si no se proporciona onPress
+ * @param {string} [props.variant='primary'] - Variante visual ('primary', 'secondary', 'outline')
+ * @param {string} [props.icon] - Nombre del icono de Ionicons a mostrar
+ * @param {string} [props.iconPosition='right'] - Posición del icono ('left', 'right')
+ * @param {boolean} [props.disabled=false] - Si el botón está deshabilitado
+ * @param {string|number} [props.width='90%'] - Ancho del botón (porcentaje o número)
+ * @param {boolean} [props.fullWidth=false] - Si debe ocupar el 100% del ancho
+ * @param {Object} [props.style] - Estilos adicionales para el contenedor
+ * @param {Object} [props.textStyle] - Estilos adicionales para el texto
+ */
 const CustomButton = ({
   text,
   onPress,
   route,
-  variant = "primary", // primary, secondary, outline
+  variant = "primary",
   icon,
-  iconPosition = "right", // left, right
+  iconPosition = "right",
   disabled = false,
-  width = "90%", // puede ser porcentaje o número
+  width = "90%",
   fullWidth = false,
   style,
   textStyle,
 }) => {
   const router = useRouter();
 
+  /**
+   * Maneja el evento de presionar el botón
+   * Prioriza onPress sobre navegación por route
+   */
   const handlePress = () => {
     if (disabled) return;
 
@@ -31,6 +50,10 @@ const CustomButton = ({
     }
   };
 
+  /**
+   * Obtiene los estilos del botón según la variante y configuración
+   * @returns {Array} - Array de estilos combinados
+   */
   const getButtonStyle = () => {
     const baseStyle = [
       styles.button,
@@ -51,6 +74,10 @@ const CustomButton = ({
     }
   };
 
+  /**
+   * Obtiene los estilos del texto según la variante
+   * @returns {Array} - Array de estilos de texto
+   */
   const getTextStyle = () => {
     const baseStyle = [styles.buttonText];
 
@@ -66,6 +93,10 @@ const CustomButton = ({
     }
   };
 
+  /**
+   * Determina el color del icono según la variante del botón
+   * @returns {string} - Color del icono
+   */
   const getIconColor = () => {
     switch (variant) {
       case "primary":
@@ -85,6 +116,7 @@ const CustomButton = ({
       disabled={disabled}
       activeOpacity={0.8}
     >
+      {/* Icono izquierdo */}
       {icon && iconPosition === "left" && (
         <Ionicons
           name={icon}
@@ -94,8 +126,10 @@ const CustomButton = ({
         />
       )}
 
+      {/* Texto del botón */}
       <Text style={[...getTextStyle(), textStyle]}>{text}</Text>
 
+      {/* Icono derecho */}
       {icon && iconPosition === "right" && (
         <Ionicons
           name={icon}
@@ -109,6 +143,7 @@ const CustomButton = ({
 };
 
 const styles = StyleSheet.create({
+  // Estilo base del botón
   button: {
     flexDirection: "row",
     paddingVertical: 14,
@@ -116,7 +151,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
+    gap: 16,
   },
 
   // Variantes de botón
@@ -134,7 +169,7 @@ const styles = StyleSheet.create({
     borderColor: colors.secondary,
   },
 
-  // Estilos de texto
+  // Estilos de texto según variante
   buttonText: {
     ...typography.semibold.medium,
   },
@@ -148,12 +183,12 @@ const styles = StyleSheet.create({
     color: colors.secondary,
   },
 
-  // Estados
+  // Estado deshabilitado
   disabled: {
     opacity: 0.5,
   },
 
-  // Iconos
+  // Posicionamiento de iconos
   iconLeft: {
     marginRight: -5,
   },

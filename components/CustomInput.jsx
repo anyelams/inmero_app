@@ -11,6 +11,24 @@ import {
 import { colors } from "../config/theme";
 import { typography } from "../config/typography";
 
+/**
+ * Input personalizado con validación, iconos y funcionalidad de contraseña
+ * @param {Object} props
+ * @param {string} [props.label] - Etiqueta del campo
+ * @param {string} [props.placeholder] - Texto placeholder
+ * @param {string} props.value - Valor actual del input
+ * @param {Function} props.onChangeText - Función llamada cuando cambia el texto
+ * @param {string} [props.icon] - Nombre del icono de Ionicons a mostrar
+ * @param {string} [props.keyboardType='default'] - Tipo de teclado ('default', 'email-address', 'numeric', etc.)
+ * @param {string} [props.autoCapitalize='none'] - Configuración de auto-capitalización
+ * @param {boolean} [props.autoCorrect=false] - Si debe activar autocorrección
+ * @param {boolean} [props.secureTextEntry=false] - Si es un campo de contraseña
+ * @param {boolean} [props.editable=true] - Si el campo es editable
+ * @param {string} [props.error] - Mensaje de error a mostrar
+ * @param {boolean} [props.showPasswordToggle=false] - Si mostrar botón para toggle de contraseña
+ * @param {Object} [props.style] - Estilos adicionales para el contenedor
+ * @param {Object} [props.inputStyle] - Estilos adicionales para el TextInput
+ */
 const CustomInput = ({
   label,
   placeholder,
@@ -27,18 +45,28 @@ const CustomInput = ({
   style,
   inputStyle,
 }) => {
+  // Estado para controlar la visibilidad de la contraseña
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
+  /**
+   * Alterna la visibilidad de la contraseña
+   */
   const handleTogglePassword = () => {
     setIsPasswordVisible(!isPasswordVisible);
   };
 
+  /**
+   * Determina si el texto debe estar oculto
+   * Solo oculta si secureTextEntry es true Y la contraseña no es visible
+   */
   const isSecure = secureTextEntry && !isPasswordVisible;
 
   return (
     <View style={[styles.container, style]}>
+      {/* Etiqueta del campo */}
       {label && <Text style={styles.label}>{label}</Text>}
 
+      {/* Contenedor del input con estados visuales */}
       <View
         style={[
           styles.inputContainer,
@@ -46,6 +74,7 @@ const CustomInput = ({
           !editable && styles.inputContainerDisabled,
         ]}
       >
+        {/* Icono izquierdo */}
         {icon && (
           <Ionicons
             name={icon}
@@ -54,6 +83,7 @@ const CustomInput = ({
           />
         )}
 
+        {/* Campo de texto principal */}
         <TextInput
           placeholder={placeholder}
           style={[styles.input, inputStyle]}
@@ -67,6 +97,7 @@ const CustomInput = ({
           placeholderTextColor={colors.textSec}
         />
 
+        {/* Botón toggle para contraseñas */}
         {showPasswordToggle && secureTextEntry && (
           <TouchableOpacity onPress={handleTogglePassword} disabled={!editable}>
             <Ionicons
@@ -78,20 +109,26 @@ const CustomInput = ({
         )}
       </View>
 
+      {/* Mensaje de error */}
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  // Contenedor principal del componente
   container: {
     marginBottom: 12,
   },
+
+  // Estilo de la etiqueta
   label: {
     ...typography.semibold.regular,
     color: colors.textSec,
     marginBottom: 6,
   },
+
+  // Contenedor del input con bordes y padding
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -103,19 +140,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "transparent",
   },
+
+  // Estado de error - borde rojo y fondo claro
   inputContainerError: {
     borderColor: colors.error,
     backgroundColor: "#fef2f2",
   },
+
+  // Estado deshabilitado - apariencia reducida
   inputContainerDisabled: {
     backgroundColor: colors.border,
     opacity: 0.6,
   },
+
+  // Estilo del TextInput principal
   input: {
     flex: 1,
     ...typography.regular.medium,
     color: colors.text,
   },
+
+  // Mensaje de error debajo del input
   errorText: {
     ...typography.regular.small,
     color: colors.error,

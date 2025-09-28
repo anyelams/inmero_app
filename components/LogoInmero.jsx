@@ -1,7 +1,12 @@
 // components/LogoInmero.jsx
 import React from "react";
-import { View, Image, StyleSheet } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 
+/**
+ * Logo de la empresa Inmero con dimensiones configurables
+ * @param {number} [width=150] - Ancho del logo en pixels
+ * @param {number} [height=140] - Alto del logo en pixels
+ */
 export default function LogoInmero({ width = 150, height = 140 }) {
   return (
     <View style={styles.container}>
@@ -17,7 +22,7 @@ export default function LogoInmero({ width = 150, height = 140 }) {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    marginBottom: 4, // puedes ajustar esto desde el padre si necesitas
+    marginBottom: 4,
   },
   image: {
     // El tamaño se recibe por props

@@ -14,23 +14,31 @@ import {
   saveUsername,
 } from "../services/auth";
 
-// Casting seguro de `extra`
+// Obtener URL de la API desde configuración
 const API_URL = Constants.expoConfig?.extra?.API_URL ?? "";
 
-// -------------------------
-// Contexto de sesión
-// -------------------------
+// Crear contexto de sesión
 const SessionContext = createContext(null);
 
 export const SessionProvider = ({ children }) => {
+  // Estados principales de la sesión
   const [empresaSeleccionada, setEmpresaSeleccionada] = useState(null);
   const [rolesByCompany, setRolesByCompany] = useState([]);
   const [token, setTokenState] = useState(null);
   const [username, setUsernameState] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
 
-  // -------------------------
-  //   GUARDAR SESIÓN COMPLETA
-  // -------------------------
+  /**
+   * Guarda una sesión completa con todos los datos necesarios
+   * @param {Object} params - Parámetros de la sesión
+   * @param {string} params.token - JWT token
+   * @param {number} params.empresaId - ID de la empresa
+   * @param {number} params.rolId - ID del rol
+   * @param {string} params.empresaNombre - Nombre de la empresa
+   * @param {string} params.rolNombre - Nombre del rol
+   * @param {Array} params.rolesByCompany - Lista de roles por empresa
+   * @param {string} params.refreshToken - Token de renovación (opcional)
+   */
   const guardarSesionCompleta = async ({
     token,
     empresaId,
@@ -40,20 +48,27 @@ export const SessionProvider = ({ children }) => {
     rolesByCompany,
     refreshToken = null,
   }) => {
+    // Validar parámetros requeridos
     if (!token || !empresaId || !rolId) {
       throw new Error("Token, empresaId y rolId son requeridos");
     }
 
-    // Guardar tokens
+    // Guardar tokens en almacenamiento seguro
     await saveTokens(token, refreshToken);
     setTokenState(token);
 
-    // Guardar username
+    // Extraer y guardar email del token JWT
+    const tokenData = decodificarToken(token);
+    if (tokenData?.sub) {
+      setUserEmail(tokenData.sub);
+    }
+
+    // Guardar username si existe
     if (username) {
       await saveUsername(username);
     }
 
-    // Guardar empresa seleccionada
+    // Crear y guardar contexto de empresa/rol
     const contexto = {
       empresaId,
       rolId,
@@ -63,21 +78,26 @@ export const SessionProvider = ({ children }) => {
     await saveEmpresaSeleccionada(contexto);
     setEmpresaSeleccionada(contexto);
 
-    // Guardar roles
+    // Guardar lista de roles disponibles
     const rolesValidos = rolesByCompany || [];
     await saveRolesByCompany(rolesValidos);
     setRolesByCompany(rolesValidos);
   };
 
-  // -------------------------
-  //   CAMBIAR CONTEXTO
-  // -------------------------
+  /**
+   * Cambia el contexto actual (empresa/rol) del usuario
+   * @param {number} empresaId - ID de la nueva empresa
+   * @param {number} rolId - ID del nuevo rol
+   * @param {boolean} rememberAsDefault - Si recordar como predeterminado
+   * @returns {boolean} - true si el cambio fue exitoso
+   */
   const cambiarContexto = async (
     empresaId,
     rolId,
     rememberAsDefault = true
   ) => {
     try {
+      // Realizar petición al servidor para cambiar contexto
       const response = await axios.post(
         `${API_URL}/auth/switch-context`,
         { empresaId, rolId, rememberAsDefault },
@@ -86,10 +106,12 @@ export const SessionProvider = ({ children }) => {
 
       const { token: newToken, refreshToken } = response.data;
 
+      // Buscar información de la empresa/rol seleccionado
       const empresaInfo = rolesByCompany.find(
         (item) => item.empresaId === empresaId && item.rolId === rolId
       );
 
+      // Guardar nueva sesión con el nuevo token
       await guardarSesionCompleta({
         token: newToken,
         refreshToken,
@@ -110,18 +132,28 @@ export const SessionProvider = ({ children }) => {
     }
   };
 
-  // -------------------------
-  //   CARGAR SESIÓN INICIAL
-  // -------------------------
+  /**
+   * Carga la sesión guardada al inicializar la aplicación
+   */
   useEffect(() => {
     const cargarSesion = async () => {
       try {
+        // Recuperar datos guardados del almacenamiento
         const savedToken = await getToken();
         const savedUsername = await getUsername();
         const savedEmpresa = await getEmpresaSeleccionada();
         const savedRoles = await getRolesByCompany();
 
-        if (savedToken) setTokenState(savedToken);
+        // Restaurar token y extraer email
+        if (savedToken) {
+          setTokenState(savedToken);
+          const tokenData = decodificarToken(savedToken);
+          if (tokenData?.sub) {
+            setUserEmail(tokenData.sub);
+          }
+        }
+
+        // Restaurar otros datos de sesión
         if (savedUsername) setUsernameState(savedUsername);
         if (savedEmpresa) setEmpresaSeleccionada(savedEmpresa);
         if (savedRoles) setRolesByCompany(savedRoles);
@@ -132,25 +164,33 @@ export const SessionProvider = ({ children }) => {
     cargarSesion();
   }, []);
 
-  // -------------------------
-  //   CERRAR SESIÓN
-  // -------------------------
+  /**
+   * Cierra la sesión actual y limpia todos los datos
+   */
   const cerrarSesion = async () => {
     await clearSessionData();
     setTokenState(null);
     setUsernameState(null);
+    setUserEmail(null);
     setEmpresaSeleccionada(null);
     setRolesByCompany([]);
   };
 
-  // -------------------------
-  //   HELPERS
-  // -------------------------
+  /**
+   * Verifica si el usuario tiene múltiples opciones de empresa/rol
+   * @returns {boolean} - true si tiene más de una opción
+   */
   const tieneMultiplesOpciones = () => rolesByCompany.length > 1;
 
+  /**
+   * Decodifica un JWT token y retorna su payload
+   * @param {string} tokenParam - Token a decodificar (opcional, usa el actual si no se proporciona)
+   * @returns {Object|null} - Payload del token o null si hay error
+   */
   const decodificarToken = (tokenParam = null) => {
     const tokenADecodificar = tokenParam || token;
     if (!tokenADecodificar) return null;
+
     try {
       const payload = tokenADecodificar.split(".")[1];
       return JSON.parse(atob(payload));
@@ -160,29 +200,67 @@ export const SessionProvider = ({ children }) => {
     }
   };
 
+  /**
+   * Verifica si el token actual es válido (no expirado)
+   * @returns {boolean} - true si el token es válido
+   */
   const tokenEsValido = () => {
     const claims = decodificarToken();
     if (!claims) return false;
+
     const ahora = Math.floor(Date.now() / 1000);
     return claims.exp > ahora;
   };
 
+  /**
+   * Genera iniciales del usuario basadas en su email
+   * Ejemplos:
+   * - juan.perez@empresa.com → "JP"
+   * - carlos@empresa.com → "CA"
+   * @returns {string} - Iniciales del usuario
+   */
+  const getUserInitials = () => {
+    if (!userEmail) return "U";
+
+    const email = userEmail.toLowerCase();
+    const parts = email.split("@")[0]; // Solo la parte antes del @
+
+    // Si tiene punto, usar primeras letras de cada parte
+    if (parts.includes(".")) {
+      const nameParts = parts.split(".");
+      return nameParts
+        .slice(0, 2) // Máximo 2 partes
+        .map((part) => part.charAt(0))
+        .join("")
+        .toUpperCase();
+    }
+
+    // Si no tiene punto, usar las primeras 2 letras
+    return parts.substring(0, 2).toUpperCase();
+  };
+
+  // Valores que se exponen a través del contexto
   const contextValue = {
+    // Estados
     empresaSeleccionada,
     setEmpresaSeleccionada,
     rolesByCompany,
     setRolesByCompany,
     token,
     username,
+    userEmail,
     setUsername: setUsernameState,
 
+    // Métodos principales
     guardarSesionCompleta,
     cambiarContexto,
     cerrarSesion,
 
+    // Utilidades
     tieneMultiplesOpciones,
     decodificarToken,
     tokenEsValido,
+    getUserInitials,
   };
 
   return (
@@ -192,6 +270,11 @@ export const SessionProvider = ({ children }) => {
   );
 };
 
+/**
+ * Hook para usar el contexto de sesión
+ * @returns {Object} - Contexto de sesión
+ * @throws {Error} - Si se usa fuera del SessionProvider
+ */
 export const useSession = () => {
   const context = useContext(SessionContext);
   if (!context) {
