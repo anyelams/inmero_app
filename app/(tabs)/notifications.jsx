@@ -1,19 +1,25 @@
+// app/(tabs)/notifications.jsx
+import * as Notifications from "expo-notifications";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
+  Linking,
+  ScrollView,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import CustomHeader from "../../components/CustomHeader";
+import Header from "../../components/Header";
+import { colors } from "../../config/theme";
+import { typography } from "../../config/typography";
 
+// Datos de ejemplo para notificaciones mientras se implementa la API real
 const mockData = [
   {
     id: 1,
-    titulo: "Nuevo mensaje",
+    titulo: "Nuevo mensaje recibido",
     mensaje: "Revisa la bandeja de entrada.",
     fecha: "hace 5 min",
     estado: "no leida",
@@ -34,61 +40,114 @@ const mockData = [
   },
 ];
 
+/**
+ * Pantalla de notificaciones de la aplicación
+ * Muestra una lista de notificaciones del usuario con estados de leído/no leído,
+ * permite marcar notificaciones individuales como leídas y gestiona permisos
+ * de notificaciones del sistema
+ */
 export default function NotificationsScreen() {
-  const [notificaciones, setNotificaciones] = useState([]);
+  const router = useRouter();
 
+  // Estados de la pantalla
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  /**
+   * Inicializa la pantalla cargando datos mock y verificando permisos
+   */
   useEffect(() => {
     setNotificaciones(mockData);
+
+    /**
+     * Verifica el estado de los permisos de notificaciones
+     */
+    const checkPermissions = async () => {
+      try {
+        const settings = await Notifications.getPermissionsAsync();
+        setNotificationsEnabled(settings.granted);
+      } catch (e) {
+        console.log("Error verificando permisos:", e);
+      }
+    };
+
+    checkPermissions();
   }, []);
 
+  /**
+   * Marca una notificación específica como leída
+   * @param {number} id - ID de la notificación a marcar como leída
+   */
   const marcarComoLeida = (id) => {
     setNotificaciones((prev) =>
       prev.map((n) => (n.id === id ? { ...n, estado: "leida" } : n))
     );
   };
 
+  /**
+   * Marca todas las notificaciones como leídas
+   */
   const marcarTodoComoLeido = () => {
     setNotificaciones((prev) => prev.map((n) => ({ ...n, estado: "leida" })));
   };
 
+  // Contador de notificaciones no leídas para mostrar en el header
   const unreadCount = notificaciones.filter((n) => n.estado !== "leida").length;
 
-  return (
-    <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
-      <CustomHeader title="Notificaciones" backRoute="(tabs)/home" />
+  /**
+   * Abre la configuración del sistema para gestionar permisos de notificaciones
+   */
+  const handleOpenSettings = async () => {
+    try {
+      await Linking.openSettings();
+    } catch (e) {
+      console.log("Error abriendo ajustes:", e);
+    }
+  };
 
-      <FlatList
-        data={notificaciones}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ paddingBottom: 80 }}
-        renderItem={({ item }) => (
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      {/* Header con contador de notificaciones no leídas */}
+      <Header
+        title={`Notificaciones${unreadCount > 0 ? ` (${unreadCount})` : ""}`}
+        onBackPress={() => router.push("/")}
+      />
+
+      {/* Lista scrolleable de notificaciones */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {notificaciones.map((item, index) => (
           <TouchableOpacity
+            key={item.id}
             onPress={() => marcarComoLeida(item.id)}
             disabled={item.estado === "leida"}
-            style={[styles.card, item.estado === "leida" && styles.cardLeida]}
+            style={styles.listItem}
           >
-            <View style={styles.iconCircle}>
-              <Ionicons
-                name={
-                  item.estado === "leida"
-                    ? "notifications-outline"
-                    : "notifications"
-                }
-                size={22}
-                color={item.estado === "leida" ? "#888" : "#007AFF"}
-              />
-            </View>
+            {/* Indicador visual para notificaciones no leídas */}
+            {item.estado !== "leida" && <View style={styles.indicator} />}
+
+            {/* Contenido de la notificación */}
             <View style={styles.textContainer}>
-              <View style={styles.textHeader}>
-                <Text style={styles.titulo}>{item.titulo}</Text>
-                <Text style={styles.fecha}>{item.fecha}</Text>
-              </View>
+              <Text
+                style={
+                  item.estado === "leida"
+                    ? styles.tituloRead
+                    : styles.tituloUnread
+                }
+                numberOfLines={3}
+              >
+                {item.titulo}
+              </Text>
+              <Text style={styles.fecha}>{item.fecha}</Text>
               <Text style={styles.mensaje}>{item.mensaje}</Text>
             </View>
           </TouchableOpacity>
-        )}
-      />
+        ))}
+      </ScrollView>
 
+      {/* Botón flotante para marcar todas como leídas (solo si hay no leídas) */}
       {unreadCount > 0 && (
         <TouchableOpacity onPress={marcarTodoComoLeido} style={styles.fab}>
           <Text style={styles.fabText}>Marcar todo leído</Text>
@@ -99,61 +158,99 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  card: {
-    backgroundColor: "#ECEEF1",
-    marginHorizontal: 20,
-    marginVertical: 8,
-    padding: 15,
-    borderRadius: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: "#007AFF",
+  // Contenedor principal con safe area
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+
+  // Configuración del scroll
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 0,
+    paddingBottom: 80, // Espacio para el FAB
+  },
+
+  // Barra de advertencia (no utilizada actualmente)
+  warningBar: {
     flexDirection: "row",
+    backgroundColor: colors.red,
+    padding: 10,
     alignItems: "center",
-    shadowColor: "#B0B0B0",
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardLeida: {
-    backgroundColor: "#F2F2F2",
-    borderLeftColor: "#B0B0B0",
-    opacity: 0.9,
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#E0E0E0",
     justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
   },
-  textContainer: { flex: 1 },
-  textHeader: {
+  warningText: {
+    ...typography.regular.medium,
+    color: colors.white,
+    marginLeft: 6,
+  },
+
+  // Item individual de notificación
+  listItem: {
+    backgroundColor: colors.base,
+    marginVertical: 6,
+    padding: 16,
+    borderRadius: 10,
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 5,
+    alignItems: "flex-start",
   },
-  titulo: { fontWeight: "bold", fontSize: 16, color: "#333" },
-  fecha: { fontSize: 12, color: "#777" },
-  mensaje: { fontSize: 14, color: "#444" },
+
+  // Indicador visual de notificación no leída
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.secondary,
+    marginRight: 10,
+    marginTop: 6,
+  },
+
+  // Contenedor del texto de la notificación
+  textContainer: {
+    flex: 1,
+  },
+
+  // Estilos de título según estado
+  tituloUnread: {
+    ...typography.semibold.medium,
+    color: colors.text,
+    marginBottom: 2,
+  },
+  tituloRead: {
+    ...typography.medium.large,
+    color: colors.textSec,
+    marginBottom: 2,
+  },
+
+  // Fecha de la notificación
+  fecha: {
+    ...typography.regular.regular,
+    color: colors.textSec,
+    marginBottom: 6,
+  },
+
+  // Mensaje de la notificación
+  mensaje: {
+    ...typography.regular.large,
+    color: colors.textSec,
+  },
+
+  // Botón flotante para marcar todas como leídas
   fab: {
     position: "absolute",
     bottom: 30,
     right: 20,
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.secondary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    elevation: 1,
   },
   fabText: {
-    color: "#fff",
-    fontWeight: "bold",
+    ...typography.semibold.medium,
+    color: colors.white,
   },
 });
