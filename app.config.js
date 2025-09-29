@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 export default ({ config }) => ({
   ...config,
   expo: {
@@ -12,6 +14,7 @@ export default ({ config }) => ({
       supportsTablet: true,
     },
     android: {
+      package: "com.luami180.inmero",
       adaptiveIcon: {
         backgroundColor: "#ffffff",
         foregroundImage: "./assets/images/android-icon.png",
@@ -97,7 +100,7 @@ export default ({ config }) => ({
       API_URL_REPORT_PRODUCTO_VENCIMIENTO_NUEVO:
         process.env.API_URL_REPORT_PRODUCTO_VENCIMIENTO_NUEVO,
       eas: {
-        projectId: process.env.EXPO_PUBLIC_projectId,
+        projectId: "37b6f668-ef2a-4572-bd6f-2ea90941e498",
       },
     },
   },
