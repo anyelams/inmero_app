@@ -11,6 +11,7 @@ export const colors = {
   white: "#FFFFFF", // Blanco
   error: "#B3261E", // Rojo
   success: "#34A853", // Verde
+  warning: "#F9AB00", // Amarillo
   text: "#11181C", // texto principal
   textSec: "#6b7280", // texto secundario
 };
