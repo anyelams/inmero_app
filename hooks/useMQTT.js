@@ -50,12 +50,6 @@ console.log("MQTT CONFIG", {
  * @returns {Object|null} lastMessage - Último mensaje recibido {topic, message}
  * @returns {Function} toggleDevice - Función para controlar dispositivos
  * @returns {Function} connect - Función para reconectar manualmente
- *
- * @example
- * const { connected, temperature, toggleDevice } = useMQTT();
- *
- * // Controlar un dispositivo
- * await toggleDevice("sensor/bombillo", "on");
  */
 export const useMQTT = () => {
   const [temperature, setTemperature] = useState(null);
@@ -183,10 +177,6 @@ export const useMQTT = () => {
    *
    * @param {string} topic - Topic MQTT del dispositivo (ej: "sensor/bombillo")
    * @param {string} estado - Estado deseado del dispositivo ("on" | "off")
-   *
-   * @example
-   * toggleDevice("sensor/bombillo", "on");
-   * toggleDevice("sensor/ventilador", "off");
    */
   const toggleDevice = (topic, estado) => {
     if (!clientRef.current || !connected) {

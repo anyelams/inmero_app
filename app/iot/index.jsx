@@ -166,7 +166,7 @@ export default function IotScreen() {
   };
 
   const handleInfoPress = () => {
-    router.push("modules/IoT/temperatura");
+    router.push("/iot/temperature");
   };
 
   return (
