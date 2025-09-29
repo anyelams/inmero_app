@@ -305,10 +305,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     letterSpacing: -0.2,
   },
-  countText: {
-    ...typography.bold.small,
-    color: colors.white,
-  },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
