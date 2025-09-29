@@ -250,24 +250,6 @@ export default function CameraScreen() {
     setCameraLayout({ width, height });
   };
 
-  // Componente para el botón de flash
-  const FlashButton = () => (
-    <TouchableOpacity
-      onPress={() => setTorchEnabled((t) => !t)}
-      style={[
-        styles.headerFlashButton,
-        torchEnabled && { backgroundColor: colors.warning || "#ffe500" },
-      ]}
-      disabled={!isCameraReady || facing === "front"}
-    >
-      <Ionicons
-        name={torchEnabled ? "flashlight" : "flashlight-outline"}
-        size={20}
-        color={torchEnabled ? colors.text : colors.textSec}
-      />
-    </TouchableOpacity>
-  );
-
   if (!permission) return <View style={styles.container} />;
 
   if (!permission.granted)
@@ -337,14 +319,6 @@ export default function CameraScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.headerContainer}>
-        <Header
-          title="Escáner de Códigos"
-          onBackPress={() => router.push("/")}
-          rightComponent={<FlashButton />}
-        />
-      </SafeAreaView>
-
       <TouchableWithoutFeedback onPress={handleFocus}>
         <CameraView
           ref={cameraRef}
@@ -358,6 +332,30 @@ export default function CameraScreen() {
           onLayout={onCameraLayout}
           onCameraReady={() => setIsCameraReady(true)}
         >
+          {/* Botón de regresar en la esquina superior izquierda */}
+          <TouchableOpacity
+            onPress={() => router.push("/")}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.white} />
+          </TouchableOpacity>
+
+          {/* Botón de flash en la esquina superior derecha */}
+          <TouchableOpacity
+            onPress={() => setTorchEnabled((t) => !t)}
+            style={[
+              styles.flashButton,
+              torchEnabled && { backgroundColor: colors.warning || "#ffe500" },
+            ]}
+            disabled={!isCameraReady || facing === "front"}
+          >
+            <Ionicons
+              name={torchEnabled ? "flashlight" : "flashlight-outline"}
+              size={20}
+              color={torchEnabled ? colors.text : colors.white}
+            />
+          </TouchableOpacity>
+
           <View style={styles.statusContainer}>
             <Text style={styles.statusText}>
               {!isCameraReady
@@ -413,10 +411,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-  },
-  headerContainer: {
-    backgroundColor: colors.background || "#fff",
-    zIndex: 10,
   },
   permissionContainer: {
     flex: 1,
@@ -481,13 +475,37 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     paddingHorizontal: 24,
   },
-  headerFlashButton: {
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 20,
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: colors.base,
+    backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  flashButton: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -539,8 +557,9 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   iconButton: {
+    width: 70,
+    height: 70,
     backgroundColor: colors.white,
-    padding: 20,
     borderRadius: 35,
     alignItems: "center",
     justifyContent: "center",
@@ -581,7 +600,7 @@ const styles = StyleSheet.create({
   },
   statusContainer: {
     position: "absolute",
-    top: 20,
+    top: 110,
     left: 24,
     right: 24,
     backgroundColor: "rgba(0,0,0,0.7)",
