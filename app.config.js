@@ -17,7 +17,7 @@ export default ({ config }) => ({
       package: "com.luami180.inmero",
       adaptiveIcon: {
         backgroundColor: "#ffffff",
-        foregroundImage: "./assets/images/android-icon.png",
+        foregroundImage: "./assets/images/icon.png",
       },
       edgeToEdgeEnabled: true,
     },
