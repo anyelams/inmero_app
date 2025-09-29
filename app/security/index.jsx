@@ -5,7 +5,7 @@ import UnderConstruction from "../../components/UnderConstruction";
 
 export default function SecurityScreen() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
       <Header title="Módulo Seguridad" />
       <UnderConstruction />
     </SafeAreaView>
